@@ -1,4 +1,7 @@
-﻿#include <cuda_runtime.h>
+﻿// Author: Conrad Fernandez
+// Student Number: 20219637
+
+#include <cuda_runtime.h>
 #include <stdio.h>
 
 int GetCoresPerSM(int major, int minor) {

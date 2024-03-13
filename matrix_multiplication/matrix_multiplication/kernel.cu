@@ -1,10 +1,13 @@
-﻿#include <stdio.h>
+﻿// Author: Conrad Fernandez
+// Student Number: 20219637
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
-#define N 100	// Matrix size
+#define N 1500	// Matrix size
 
 void rand_matrix(float *matrix, int n) {
 	// Fill a N x N matrix with random floats

@@ -1,0 +1,32 @@
+= Machine Problems 1
+Conrad Fernandez
+:doctype: article
+:imagesdir: ./images
+:toc:
+
+== Statement of originality
+
+"I do hereby verify that this machine problem submission is my own work and contains my own original ideas, concepts, and designs. No portion of this report or code has been copied in whole or in part from another source, with the possible exception of properly referenced material". 
+
+== Part 1
+=== Code
+[source,c]
+----
+include::device_query/device_query/kernel.cu[]
+----
+=== Analysis
+
+
+== Part 2
+
+=== Code
+[source,c]
+----
+include::matrix_multiplication/matrix_multiplication/kernel.cu[]
+----
+
+=== Analysis
+==== Host to Device Memory Transfer Time vs. Matrix Size
+image::host_to_device.png[]
+==== Device to Host Memory Transfer Time vs. Matrix Size
+image::device_to_host.png[]
