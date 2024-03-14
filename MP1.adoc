@@ -30,3 +30,12 @@ include::matrix_multiplication/matrix_multiplication/kernel.cu[]
 image::data_transfer_time_vs_matrix_size.png[]
 
 As can be seen in the plot, host to device memory transfer is faster than device to host memory transfer. This is expected as host-to-device transfers are often optimized for loading data into the GPU for processing. In contrast, device-to-host transfers are typically less frequent and may not be as heavily optimized, since the primary use case of GPUs is to perform computations rather than to act as sources of data.
+
+==== GPU vs. CPU Time to Compute Matrix Multiplication
+===== Without Memory Transfer Accounted
+image::compute_time.png[]
+===== With Memory Transfer Accounted
+image::compute_time_transfer_accounted.png[]
+
+As can be seen in the plots, calculating the matrix multiplication on the GPU is always faster than on the CPU. This is expected as the GPU is designed to perform parallel computations, and matrix multiplication is a highly parallelizable operation. A time when it is not beneficial to run the matrix multiplication on the GPU is when the matrix size is small, and the overhead of transferring data to and from the GPU is greater than the performance gains from calculating it on the GPU.
+

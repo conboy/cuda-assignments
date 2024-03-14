@@ -7,29 +7,29 @@
 int GetCoresPerSM(int major, int minor) {
     // Defines for GPU Architecture types (using NVIDIA's definitions)
     if (major == 1) { // Tesla
-        return 8; // Early Tesla architecture
+        return 8;
     }
     else if (major == 2) {
-        if (minor == 0) return 32; // Fermi Generation (GF100 architecture)
-        else return 48; // Fermi Generation (GF104 architecture)
+        if (minor == 0) return 32; // Fermi Generation
+        else return 48;
     }
     else if (major == 3) { // Kepler
-        return 192; // GK104/GK106/GK107 early Kepler architecture
+        return 192;
     }
     else if (major == 5) { // Maxwell
-        return 128; // Maxwell architecture
+        return 128;
     }
     else if (major == 6) { // Pascal
-        if (minor == 0 || minor == 2) return 64; // GP100/GP102, GP104, GP106, GP107 architecture
-        else if (minor == 1) return 128; // GP108 architecture
+        if (minor == 0 || minor == 2) return 64;
+        else if (minor == 1) return 128;
     }
     else if (major == 7) { // Volta and Turing
-        if (minor == 0) return 64; // Volta architecture (V100)
-        else if (minor == 5) return 64; // Turing architecture (T4, RTX series)
+        if (minor == 0) return 64;
+        else if (minor == 5) return 64;
     }
     else if (major == 8) { // Ampere
-        if (minor == 0 || minor == 6) return 64; // Ampere architecture (A100, GA106)
-        else if (minor == 6) return 128; // Ampere (GA106 specific variant)
+        if (minor == 0 || minor == 6) return 64;
+        else if (minor == 6) return 128;
     }
     return -1; // Default to -1 cores per SM for unknown architectures
 }
