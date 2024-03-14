@@ -26,7 +26,7 @@ include::matrix_multiplication/matrix_multiplication/kernel.cu[]
 ----
 
 === Analysis
-==== Host to Device Memory Transfer Time vs. Matrix Size
-image::host_to_device.png[]
-==== Device to Host Memory Transfer Time vs. Matrix Size
-image::device_to_host.png[]
+==== Memory Transfer Time vs. Matrix Size
+image::data_transfer_time_vs_matrix_size.png[]
+
+As can be seen in the plot, host to device memory transfer is faster than device to host memory transfer. This is expected as host-to-device transfers are often optimized for loading data into the GPU for processing. In contrast, device-to-host transfers are typically less frequent and may not be as heavily optimized, since the primary use case of GPUs is to perform computations rather than to act as sources of data.
