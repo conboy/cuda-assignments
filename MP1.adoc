@@ -15,7 +15,9 @@ Conrad Fernandez
 include::device_query/device_query/kernel.cu[]
 ----
 === Analysis
+image::device_query.png[]
 
+I am using the Nvidia GPU on my laptop so it is a T500 rather than the T600s in the Engineering Student Cluster.
 
 == Part 2
 
@@ -32,10 +34,28 @@ image::data_transfer_time_vs_matrix_size.png[]
 As can be seen in the plot, host to device memory transfer is faster than device to host memory transfer. This is expected as host-to-device transfers are often optimized for loading data into the GPU for processing. In contrast, device-to-host transfers are typically less frequent and may not be as heavily optimized, since the primary use case of GPUs is to perform computations rather than to act as sources of data.
 
 ==== GPU vs. CPU Time to Compute Matrix Multiplication
-===== Without Memory Transfer Accounted
 image::compute_time.png[]
-===== With Memory Transfer Accounted
-image::compute_time_transfer_accounted.png[]
 
-As can be seen in the plots, calculating the matrix multiplication on the GPU is always faster than on the CPU. This is expected as the GPU is designed to perform parallel computations, and matrix multiplication is a highly parallelizable operation. A time when it is not beneficial to run the matrix multiplication on the GPU is when the matrix size is small, and the overhead of transferring data to and from the GPU is greater than the performance gains from calculating it on the GPU.
+As can be seen in the plot, calculating the matrix multiplication on the GPU is faster than the CPU when the matrix size is big enough to take advantage of the parallelization performance gains. Otherwise, there is too much data transfer overhead for it to be beneficial to use the GPU. This is expected as the GPU is designed to perform parallel computations, and matrix multiplication is a highly parallelizable operation.
 
+====  GPU Block Width vs. Time to Compute Matrix Multiplication
+image::block_time.png[]
+
+As can be seen in the plot, the time to compute the matrix multiplication on the GPU decreases as the block size increases. This trend suggests that larger block sizes enable more efficient utilization of the GPU's resources, probably due to reduced overhead in managing smaller blocks and improved data locality. However, it seems there is diminishing performance gains as the block size passes 10.
+
+==== a. How many times is each element of each input matrix loaded during the execution of the kernel?
+Each element of each input matrix is loaded N * N times during the execution of the kernel because they are accessed in a nested loop that iterates N times for each element.
+
+==== b. What is the floating-point computation to global memory access (CGMA) ratio in each thread? Consider multiply and addition as separate operations and ignore the global memory store at the end. Only count global memory loads towards your off-chip bandwidth.
+
+**FLOPs**
+
+For each iteration there is 1 multiplication and 1 addition totaling 2 FLOPs. Since the loop iterates N times, each thread performs 2N FLOPs.
+
+**Global Memory Loads**
+
+Each iteration of the loop loads 1 element from matrix a and 1 element from matrix b, totaling 2 loads. Over n iterations, each thread performs 2n global memory loads.
+
+**CGMA Ratio**
+
+Therefore, the CGMA ratio is FLOPs / Global Memory Loads = 2N / 2N = 1.
