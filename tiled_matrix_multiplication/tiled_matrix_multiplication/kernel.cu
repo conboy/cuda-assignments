@@ -7,8 +7,7 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
-#define N 5	// Matrix size
-#define TILE_SIZE 16
+#define TILE_SIZE 25
 
 void rand_matrix(float* matrix, int n) {
 	// Fill a N x N matrix with random floats
@@ -22,8 +21,8 @@ void rand_matrix(float* matrix, int n) {
 
 void print_matrix(float* matrix, int n) {
 	// Print the entire matrix
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
 			printf("%f ", matrix[i * n + j]);
 		}
 		printf("\n");
@@ -51,7 +50,7 @@ bool verify_results(float* a, float* b, float* c, int n) {
 				tmp += a[i * n + k] * b[k * n + j]; // Perform the dot product of row i of A and column j of B
 			}
 			// Check against the CPU result
-			if (tmp != c[i * N + j]) return false;
+			if (tmp != c[i * n + j]) return false;
 		}
 	}
 	return true;
@@ -100,29 +99,28 @@ __global__ void gpu_tiled_matrix_mult(const float* a, const float* b, float* c, 
 		c[row * n + col] = p_value;
 }
 
-
-int main() {
-	// Initialize random number generator
-	srand((unsigned)time(NULL));
+void run_matrix_mult(int n) {
+	printf("%d x %d,", n, n);
+	printf("%d,", TILE_SIZE);
 
 	// Initialize matrices
-	float* h_m = (float*)malloc(N * N * sizeof(float));
-	float* h_n = (float*)malloc(N * N * sizeof(float));
-	float* h_p = (float*)malloc(N * N * sizeof(float));
+	float* h_m = (float*)malloc(n * n * sizeof(float));
+	float* h_n = (float*)malloc(n * n * sizeof(float));
+	float* h_p = (float*)malloc(n * n * sizeof(float));
 	float* d_m, * d_n, * d_p;
 
 	// Generate random input matrices
-	rand_matrix(h_m, N);
-	rand_matrix(h_n, N);
+	rand_matrix(h_m, n);
+	rand_matrix(h_n, n);
 
 	// Allocate device memory
-	cudaMalloc((void**)&d_m, N * N * sizeof(float));
-	cudaMalloc((void**)&d_n, N * N * sizeof(float));
-	cudaMalloc((void**)&d_p, N * N * sizeof(float));
+	cudaMalloc((void**)&d_m, n * n * sizeof(float));
+	cudaMalloc((void**)&d_n, n * n * sizeof(float));
+	cudaMalloc((void**)&d_p, n * n * sizeof(float));
 
 	// Set kernel launch config
 	dim3 threadsPerBlock(TILE_SIZE, TILE_SIZE);
-	dim3 blocksPerGrid((N + threadsPerBlock.x - 1) / threadsPerBlock.x, (N + threadsPerBlock.y - 1) / threadsPerBlock.y);
+	dim3 blocksPerGrid((n + threadsPerBlock.x - 1) / threadsPerBlock.x, (n + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
 	// Create cuda event handles
 	cudaEvent_t start, stop;
@@ -131,14 +129,14 @@ int main() {
 	cudaDeviceSynchronize(); // Ensure GPU is ready
 
 	// Copy memory from host to device
-	cudaMemcpy(d_m, h_m, N * N * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(d_n, h_n, N * N * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_m, h_m, n * n * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_n, h_n, n * n * sizeof(float), cudaMemcpyHostToDevice);
 
 	// Record the start event
 	cudaEventRecord(start, 0);
 
 	// Launch the kernel
-	gpu_tiled_matrix_mult <<<blocksPerGrid, threadsPerBlock >>> (d_m, d_n, d_p, N);
+	gpu_tiled_matrix_mult << <blocksPerGrid, threadsPerBlock >> > (d_m, d_n, d_p, n);
 
 	// Record the stop event immediately after kernel launch
 	cudaEventRecord(stop, 0);
@@ -151,23 +149,23 @@ int main() {
 	cudaEventElapsedTime(&gpu_time, start, stop);
 
 	// Output the time spent by the GPU executing the kernel
-	printf("\nTime spent on GPU kernel execution: %f ms\n", gpu_time);
+	printf("%f,", gpu_time);
 
 	// Copy the result matrix back to the host (not part of timing)
-	cudaMemcpy(h_p, d_p, N * N * sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_p, d_p, n * n * sizeof(float), cudaMemcpyDeviceToHost);
 
-	print_matrix(h_m, N);
-	printf("\n");
-	print_matrix(h_n, N);
-	printf("\n");
-	print_matrix(h_p, N);
+	//print_matrix(h_m, n);
+	//printf("\n");
+	//print_matrix(h_n, n);
+	//printf("\n");
+	//print_matrix(h_p, n);
 
 	// Assert test to see if CPU and GPU agree on result matrix
-	if (verify_results(h_m, h_n, h_p, N)) {
-		printf("TEST PASSED");
+	if (verify_results(h_m, h_n, h_p, n)) {
+		printf("TEST PASSED\n");
 	}
 	else {
-		printf("TEST FAILED");
+		printf("TEST FAILED\n");
 	}
 
 	// Free CUDA Events
@@ -181,4 +179,17 @@ int main() {
 	cudaFree(d_m);
 	cudaFree(d_n);
 	cudaFree(d_p);
+}
+
+
+int main() {
+	// Initialize random number generator
+	srand((unsigned)time(NULL));
+	for (int i = 0; i < 5; i++) {
+		run_matrix_mult(100);
+		run_matrix_mult(250);
+		run_matrix_mult(500);
+		run_matrix_mult(1000);
+		run_matrix_mult(1500);
+	}
 }

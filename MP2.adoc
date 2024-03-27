@@ -12,12 +12,17 @@ Conrad Fernandez
 === Code
 [source,c]
 ----
-include::device_query/device_query/kernel.cu[]
+include::tiled_matrix_multiplication/tiled_matrix_multiplication/kernel.cu[]
 ----
 === Analysis
-image::device_query.png[]
+image::tiled_matrix_output_example.png[]
 
-I am using the Nvidia GPU on my laptop so it is a T500 rather than the T600s in the Engineering Student Cluster.
+Here is an example of the output from running the tiled matrix multiplication code. It runs each of these matrix sizes 5 times for a specified tile size: 100 x 100, 250 x 250, 500 x 500, 1000 x 1000, 1500 x 1500. The first column is matrix size, second coulmn is tile size, and the third column is the time taken to compute the matrix multiplication. The program is run for each tile size: 2, 5, 10, 25. This output format makes it easy to copy and paste to a csv file for easy plotting.
+
+
+image::tiled_compute_time.png[]
+
+The derived plot shows a trend in matrix multiplication compute time as a function of tile size, revealing a significant decrease in compute time as the tile size is increased from 2 to 5. This decline in time is especially marked for the largest matrix tested, 1500x1500, which shows a steep drop to compute times compared to much smaller matrices at a tile size of 5. Beyond a tile size of 10, the benefit of increasing tile size diminishes across all matrix sizes, with the plot curve flattening and  suggestingdiminishing returns in efficiency from larger tile sizes. Interestingly, the compute time for a 100x100 matrix remains flat across all tile sizes, suggesting that tiling overhead may negate any computational benefits for matrices of this small scale. 
 
 == Part 2
 
