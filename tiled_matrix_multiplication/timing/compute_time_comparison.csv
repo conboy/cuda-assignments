@@ -1,0 +1,6 @@
+Matrix Size,Matrix Multiplication Compute Time,Tiled Matrix Multiplication Compute Time
+100 x 100,0.218 seconds,0.158 seconds
+250 x 250,0.952 seconds,1.541 seconds
+500 x 500,7.985 seconds,9.831 seconds
+1000 x 1000,58.436 seconds,74.456 seconds
+1500 x 1500,195.594 seconds,261.829 seconds

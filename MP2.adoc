@@ -24,6 +24,10 @@ image::tiled_compute_time.png[]
 
 The derived plot shows a trend in matrix multiplication compute time as a function of tile size, revealing a significant decrease in compute time as the tile size is increased from 2 to 5. This decline in time is especially marked for the largest matrix tested, 1500x1500, which shows a steep drop to compute times compared to much smaller matrices at a tile size of 5. Beyond a tile size of 10, the benefit of increasing tile size diminishes across all matrix sizes, with the plot curve flattening and  suggestingdiminishing returns in efficiency from larger tile sizes. Interestingly, the compute time for a 100x100 matrix remains flat across all tile sizes, suggesting that tiling overhead may negate any computational benefits for matrices of this small scale. 
 
+image::normal_vs_tiled.png[]
+
+To compare the tiled GPU matrix multiplication to the GPU matrix multiplication done in machine problems 1, I ran both implementations on the same sized input matrices to see their compute times. A tile size of 16 was used for the tiled matrix multiplication. To my surprise, the tiled matrix multiplication is slower than the normal matrix multiplication. This is likely due to the overhead of tiling. The normal matrix multiplication is faster because it is simpler and does not have the overhead of tiling.
+
 == Part 2
 
 === Code
