@@ -6,6 +6,7 @@
 #include <time.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <ctime>
 
 #define TILE_WIDTH 16
 
@@ -143,6 +144,12 @@ void run_matrix_mult(int M_rows, int M_cols, int N_rows, int N_cols) {
 	rand_matrix(h_m, M_rows, M_cols);
 	rand_matrix(h_n, N_rows, N_cols);
 
+	// Start CPU timing
+	clock_t start_cpu = clock();
+	cpu_matrix_multiply(h_m, h_n, h_p, M_rows, M_cols, N_cols);
+	clock_t end_cpu = clock();
+	double cpu_time_used = ((double)(end_cpu - start_cpu)) / CLOCKS_PER_SEC;
+	printf("CPU time: %f seconds\n", cpu_time_used);
 
 	cudaMalloc(&d_m, M_rows * M_cols * sizeof(float));
 	cudaMalloc(&d_n, N_rows * N_cols * sizeof(float));
@@ -154,7 +161,20 @@ void run_matrix_mult(int M_rows, int M_cols, int N_rows, int N_cols) {
 	dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
 	dim3 dimGrid((N_cols - 1) / TILE_WIDTH + 1, (M_rows - 1) / TILE_WIDTH + 1);
 
+	// Prepare for GPU timing
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start);
+
 	revised_tiled_matrix_mult << <dimGrid, dimBlock >> > (d_m, d_n, d_p, M_rows, M_cols, N_cols);
+
+	// End GPU timing
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
+	printf("GPU time: %f seconds\n", milliseconds / 1000.0);
 
 	cudaMemcpy(h_p, d_p, M_rows * N_cols * sizeof(float), cudaMemcpyDeviceToHost);
 
