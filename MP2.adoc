@@ -1,12 +1,17 @@
 = Machine Problems 2
-Conrad Fernandez
+:author: Conrad Fernandez
 :doctype: article
+:source-highlighter: rouge
 :imagesdir: ./images
 :toc:
 
 == Statement of originality
 
 "I do hereby verify that this machine problem submission is my own work and contains my own original ideas, concepts, and designs. No portion of this report or code has been copied in whole or in part from another source, with the possible exception of properly referenced material". 
+
+== Note from author
+
+This machine problem was completed using my NVIDIA T500 GPU. Therefore, the results may differ slightly from the results obtained using the NVIDIA T600 GPU.
 
 == Part 1
 === Code
@@ -71,3 +76,5 @@ include::revised_tiled_matrix_multiplication/revised_tiled_matrix_multiplication
 image::revised_tiled_results.png[]
 
 Here is the output from running the GPU revised tiled matrix multiplication against the CPU matrix multiplication implementation. It is clear to see that the tiled matrix multiplication implementation is much faster than the CPU's version thanks to the parallelism of the GPU.
+
+Note: I could not figure out how to do non-square 9 x 16 tiles. I tried to implement it but it was not working. I am not sure if it is possible to do non-square tiles.
