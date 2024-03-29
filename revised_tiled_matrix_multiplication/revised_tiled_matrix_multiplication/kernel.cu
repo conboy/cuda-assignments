@@ -33,10 +33,10 @@ void print_matrix(float* matrix, int rows, int cols) {
 }
 
 void cpu_matrix_multiply(const float* A, const float* B, float* C, int M, int K, int N) {
-	for (int i = 0; i < M; ++i) { // Loop over rows of A
-		for (int j = 0; j < N; ++j) { // Loop over columns of B
+	for (int i = 0; i < M; ++i) {
+		for (int j = 0; j < N; ++j) {
 			float sum = 0.0;
-			for (int k = 0; k < K; ++k) { // Loop over columns of A / rows of B
+			for (int k = 0; k < K; ++k) {
 				sum += A[i * K + k] * B[k * N + j];
 			}
 			C[i * N + j] = sum;
@@ -49,8 +49,8 @@ bool verify_results(float* a, float* b, float* c, int a_rows, int a_cols, int b_
 	for (int i = 0; i < a_rows; i++) {
 		for (int j = 0; j < b_cols; j++) {
 			float tmp = 0.0f;
-			for (int k = 0; k < a_cols; k++) { // a_cols is the same as b_rows
-				tmp += a[i * a_cols + k] * b[k * b_cols + j]; // Perform the dot product of row i of A and column j of B
+			for (int k = 0; k < a_cols; k++) {
+				tmp += a[i * a_cols + k] * b[k * b_cols + j];
 			}
 			// Check against the CPU result
 			if (tmp != c[i * b_cols + j]) return false;
@@ -135,6 +135,8 @@ void print_kernel_attributes() {
 
 
 void run_matrix_mult(int M_rows, int M_cols, int N_rows, int N_cols) {
+	printf("Matrix Sizes: %d x %d and %d x %d\n", M_rows, M_cols, N_rows, N_cols);
+
 	float* h_m = (float*)malloc(M_rows * M_cols * sizeof(float));
 	float* h_n = (float*)malloc(N_rows * N_cols * sizeof(float));
 	float* h_p = (float*)malloc(M_rows * N_cols * sizeof(float));

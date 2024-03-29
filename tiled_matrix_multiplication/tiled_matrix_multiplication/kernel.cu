@@ -184,12 +184,6 @@ void run_matrix_mult(int n) {
 	// Copy the result matrix back to the host (not part of timing)
 	cudaMemcpy(h_p, d_p, n * n * sizeof(float), cudaMemcpyDeviceToHost);
 
-	//print_matrix(h_m, n);
-	//printf("\n");
-	//print_matrix(h_n, n);
-	//printf("\n");
-	//print_matrix(h_p, n);
-
 	// Assert test to see if CPU and GPU agree on result matrix
 	if (verify_results(h_m, h_n, h_p, n)) {
 		printf("TEST PASSED\n");
