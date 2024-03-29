@@ -42,9 +42,21 @@ To find the resource usage of the kernel, I used the `cudaOccupancyMaxActiveBloc
 
 The requested information was extracted from the kernel using the implemented `print_kernel_attributes` function in the code. The output is as follows:
 
-image::resource_usage.png[]
+image::resource_usage2x2.png[]
 
-To explain this output, each thread executing the kernel uses 42 registers which is high and contributes to poor resource usage. Each block of the kernel requires 5000 bytes of shared memory. There can only be 1 active block per SM which is a consequence of high resource usage (registers and shared memory). Lastly, the max total threads per SM is 625.
+For a tile size of 2 x 2, each thread executing the kernel uses 42 registers. Each block of the kernel requires 32 bytes of shared memory (2 x 2 x 2 x 4B = 32B). There can only be 16 active blocks per SM. Lastly, the max total threads per SM is 64.
+
+image::resource_usage5x5.png[]
+
+For a tile size of 5 x 5, each thread executing the kernel uses 42 registers. Each block of the kernel requires 200 bytes of shared memory (2 x 5 x 5 x 4B = 200B). There can only be 16 active blocks per SM. Lastly, the max total threads per SM is 400.
+
+image::resource_usage10x10.png[]
+
+For a tile size of 10 x 10, each thread executing the kernel uses 42 registers. Each block of the kernel requires 800 bytes of shared memory (2 x 10 x 10 x 4B = 800B). There can only be 8 active blocks per SM. Lastly, the max total threads per SM is 800.
+
+image::resource_usage25x25.png[]
+
+For a tile size of 25 x 25, each thread executing the kernel uses 42 registers. Each block of the kernel requires 5000 bytes of shared memory (2 x 25 x 25 x 4B = 5000B). There can only be 1 active block per SM which is a consequence of high resource usage (registers and shared memory). Lastly, the max total threads per SM is 625.
 
 == Part 2
 

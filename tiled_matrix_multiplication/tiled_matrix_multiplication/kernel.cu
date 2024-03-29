@@ -75,15 +75,9 @@ __global__ void gpu_tiled_matrix_mult(const float* a, const float* b, float* c, 
 	// Loop over tiles
 	for (int i = 0; i < ceil((float)n / TILE_SIZE); i++) {
 		// Load input matrix A into tiles
-		if (row < n && (i * TILE_SIZE + tx) < n)
-			tile_a[ty][tx] = a[row * n + i * TILE_SIZE + tx];
-		else
-			tile_a[ty][tx] = 0;
+		tile_a[ty][tx] = a[row * n + i * TILE_SIZE + tx];
 		// Load input matrix B into tiles
-		if (col < n && (i * TILE_SIZE + ty) < n)
-			tile_b[ty][tx] = b[(i * TILE_SIZE + ty) * n + col];
-		else
-			tile_b[ty][tx] = 0;
+		tile_b[ty][tx] = b[(i * TILE_SIZE + ty) * n + col];
 
 		__syncthreads(); // Synchronize threads after loading tiles
 
@@ -121,6 +115,7 @@ void print_kernel_attributes() {
 	int maxThreadsPerSM = maxActiveBlocksPerSM * blockSize;
 
 	printf("Kernel Attributes for gpu_tiled_matrix_mult:\n");
+	printf("Tile Size: %d x %d\n", TILE_SIZE, TILE_SIZE);
 	printf("Number of registers used by each thread: %d\n", attr.numRegs);
 	printf("Shared memory per block: %zu bytes\n", attr.sharedSizeBytes);
 	printf("Max active blocks per SM: %d\n", maxActiveBlocksPerSM);
