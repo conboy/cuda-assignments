@@ -51,7 +51,7 @@ To explain this output, each thread executing the kernel uses 42 registers which
 === Code
 [source,c]
 ----
-include::matrix_multiplication/matrix_multiplication/kernel.cu[]
+include::revised_tiled_matrix_multiplication/revised_tiled_matrix_multiplication/kernel.cu[]
 ----
 
 === Analysis
