@@ -52,6 +52,7 @@ int main() {
         printf("    Compute Capability: %d.%d\n", prop.major, prop.minor);
         printf("    Clock Rate: %d kHz\n", prop.clockRate);
         printf("    Number of streaming multiprocessors: %d\n", prop.multiProcessorCount);
+        printf("    Max Threads per MultiProcessor: %d\n", prop.maxThreadsPerMultiProcessor);
         printf("    Number of cores: %d\n", nCores);
         printf("    Warp size: %d\n", prop.warpSize);
         printf("    Global Memory: %.2f GB\n", (float)prop.totalGlobalMem / (1024 * 1024 * 1024));

@@ -99,6 +99,36 @@ __global__ void gpu_tiled_matrix_mult(const float* a, const float* b, float* c, 
 		c[row * n + col] = p_value;
 }
 
+// Function to print the attributes of a CUDA kernel
+void print_kernel_attributes() {
+	cudaFuncAttributes attr;
+	cudaError_t err = cudaFuncGetAttributes(&attr, gpu_tiled_matrix_mult);
+
+	if (err != cudaSuccess) {
+		printf("Failed to get kernel attributes: %s\n", cudaGetErrorString(err));
+		return;
+	}
+
+	int blockSize; // The launch configuration block size (number of threads per block)
+	int maxActiveBlocksPerSM; // Maximum active blocks per SM
+
+	blockSize = TILE_SIZE * TILE_SIZE;
+
+	// Calculate maximum active blocks per SM
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocksPerSM, gpu_tiled_matrix_mult, blockSize, 0);
+
+	// Calculate the maximum total threads per SM
+	int maxThreadsPerSM = maxActiveBlocksPerSM * blockSize;
+
+	printf("Kernel Attributes for gpu_tiled_matrix_mult:\n");
+	printf("Number of registers used by each thread: %d\n", attr.numRegs);
+	printf("Shared memory per block: %zu bytes\n", attr.sharedSizeBytes);
+	printf("Max active blocks per SM: %d\n", maxActiveBlocksPerSM);
+	printf("Max total threads per SM: %d\n", maxThreadsPerSM);
+	printf("\n");
+}
+
+
 void run_matrix_mult(int n) {
 	printf("%d x %d,", n, n);
 	printf("%d,", TILE_SIZE);
@@ -185,6 +215,10 @@ void run_matrix_mult(int n) {
 int main() {
 	// Initialize random number generator
 	srand((unsigned)time(NULL));
+
+	// Print the CUDA kernel attributes
+	print_kernel_attributes();
+
 	for (int i = 0; i < 5; i++) {
 		run_matrix_mult(100);
 		run_matrix_mult(250);

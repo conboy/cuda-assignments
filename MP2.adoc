@@ -28,6 +28,24 @@ image::normal_vs_tiled.png[]
 
 To compare the tiled GPU matrix multiplication to the GPU matrix multiplication done in machine problems 1, I ran both implementations on the same sized input matrices to see their compute times. A tile size of 16 was used for the tiled matrix multiplication. To my surprise, the tiled matrix multiplication is slower than the normal matrix multiplication. This is likely due to the overhead of tiling. The normal matrix multiplication is faster because it is simpler and does not have the overhead of tiling.
 
+Question 1: In your kernel implementation, how many threads can be simultaneously scheduled on your CUDA device, considering the number of streaming multiprocessors? 
+
+image::sms.png[]
+
+The number of threads that can be simultaneously scheduled on a CUDA device is determined by the number of streaming multiprocessors (SMs) and Maximum Threads per SM using the following equation: `Total Threads = Number of SMs x Maximum Threads per SM`
+
+Therefore we get `Total Threads = 14 x 1024 = 14336 threads`
+
+Question 2: Find the resource usage of your kernel, including the number of registers, shared memory size, number of blocks per streaming multiprocessor, and maximum total threads simultaneously scheduled/executing.
+
+To find the resource usage of the kernel, I used the `cudaOccupancyMaxActiveBlocksPerMultiprocessor` and `cudaFuncGetAttributes` functions from the CUDA Runtime API.
+
+The requested information was extracted from the kernel using the implemented `print_kernel_attributes` function in the code. The output is as follows:
+
+image::resource_usage.png[]
+
+To explain this output, each thread executing the kernel uses 42 registers which is high and contributes to poor resource usage. Each block of the kernel requires 5000 bytes of shared memory. There can only be 1 active block per SM which is a consequence of high resource usage (registers and shared memory). Lastly, the max total threads per SM is 625.
+
 == Part 2
 
 === Code
