@@ -8,8 +8,7 @@
 #include <device_launch_parameters.h>
 
 #define TILE_WIDTH 16
-#define TILE_HEIGHT 9
-#define TILE_SIZE 16
+
 
 void rand_matrix(float* matrix, int rows, int cols) {
 	// Fill a rows x cols matrix with random floats
@@ -44,40 +43,55 @@ void cpu_matrix_multiply(const float* A, const float* B, float* C, int M, int K,
 	}
 }
 
+bool verify_results(float* a, float* b, float* c, int a_rows, int a_cols, int b_cols) {
+	// Verify matrix multiplication results (true == correct, false == incorrect)
+	for (int i = 0; i < a_rows; i++) {
+		for (int j = 0; j < b_cols; j++) {
+			float tmp = 0.0f;
+			for (int k = 0; k < a_cols; k++) { // a_cols is the same as b_rows
+				tmp += a[i * a_cols + k] * b[k * b_cols + j]; // Perform the dot product of row i of A and column j of B
+			}
+			// Check against the CPU result
+			if (tmp != c[i * b_cols + j]) return false;
+		}
+	}
+	return true;
+}
+
 // GPU kernel for tiled matrix multiplication for non-square matrices A(MxK) * B(KxN) = C(MxN)
 __global__ void revised_tiled_matrix_mult(const float* a, const float* b, float* c, int M, int K, int N) {
 	// Initialize tiles
-	__shared__ float tile_a[TILE_SIZE][TILE_SIZE];
-	__shared__ float tile_b[TILE_SIZE][TILE_SIZE];
+	__shared__ float tile_a[TILE_WIDTH][TILE_WIDTH];
+	__shared__ float tile_b[TILE_WIDTH][TILE_WIDTH];
 
 	// Calculate thread and block indices
 	int tx = threadIdx.x; int ty = threadIdx.y;
 	int bx = blockIdx.x; int by = blockIdx.y;
 
 	// Calculate row index for matrix A and column index for matrix B
-	int row = by * TILE_SIZE + ty; // Index for rows of matrix A (and C)
-	int col = bx * TILE_SIZE + tx; // Index for columns of matrix B (and C)
+	int row = by * TILE_WIDTH + ty; // Index for rows of matrix A (and C)
+	int col = bx * TILE_WIDTH + tx; // Index for columns of matrix B (and C)
 
 	float p_value = 0; // Holds partial products for each value in matrix C
 
 	// Loop over tiles of matrix A and matrix B
-	for (int m = 0; m < ceil((float)K / TILE_SIZE); ++m) {
+	for (int m = 0; m < ceilf((float)K / (float)TILE_WIDTH); ++m) {
 		// Load input matrix A into shared memory tile
-		if (m * TILE_SIZE + tx < K && row < M) // Check if within matrix A dimensions
-			tile_a[ty][tx] = a[row * K + m * TILE_SIZE + tx];
+		if (row < M && (m * TILE_WIDTH + tx) < K) // Check if within matrix A dimensions
+			tile_a[ty][tx] = a[row * K + (m * TILE_WIDTH + tx)];
 		else
 			tile_a[ty][tx] = 0.0;
 
 		// Load input matrix B into shared memory tile
-		if (m * TILE_SIZE + ty < K && col < N) // Check if within matrix B dimensions
-			tile_b[ty][tx] = b[(m * TILE_SIZE + ty) * N + col];
+		if (col < N && (m * TILE_WIDTH + ty) < K) // Check if within matrix B dimensions
+			tile_b[ty][tx] = b[(m * TILE_WIDTH + ty) * N + col];
 		else
 			tile_b[ty][tx] = 0.0;
 
 		__syncthreads(); // Synchronize threads to make sure tiles are loaded
 
 		// Compute partial sum for the tile
-		for (int k = 0; k < TILE_SIZE; ++k)
+		for (int k = 0; k < TILE_WIDTH; ++k)
 			p_value += tile_a[ty][k] * tile_b[k][tx];
 
 		__syncthreads(); // Synchronize threads before loading next tiles
@@ -102,7 +116,7 @@ void print_kernel_attributes() {
 	int blockSize; // The launch configuration block size (number of threads per block)
 	int maxActiveBlocksPerSM; // Maximum active blocks per SM
 
-	blockSize = TILE_WIDTH * TILE_HEIGHT;
+	blockSize = TILE_WIDTH * TILE_WIDTH;
 
 	// Calculate maximum active blocks per SM
 	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocksPerSM, revised_tiled_matrix_mult, blockSize, 0);
@@ -120,7 +134,6 @@ void print_kernel_attributes() {
 
 
 void run_matrix_mult(int M_rows, int M_cols, int N_rows, int N_cols) {
-	
 	float* h_m = (float*)malloc(M_rows * M_cols * sizeof(float));
 	float* h_n = (float*)malloc(N_rows * N_cols * sizeof(float));
 	float* h_p = (float*)malloc(M_rows * N_cols * sizeof(float));
@@ -129,13 +142,7 @@ void run_matrix_mult(int M_rows, int M_cols, int N_rows, int N_cols) {
 	// Generate random input matrices
 	rand_matrix(h_m, M_rows, M_cols);
 	rand_matrix(h_n, N_rows, N_cols);
-	print_matrix(h_m, M_rows, M_cols);
-	print_matrix(h_n, N_rows, N_cols);
 
-
-	float* t_p = (float*)malloc(M_rows * M_cols * sizeof(float));
-	cpu_matrix_multiply(h_m, h_n, t_p, M_rows, M_cols, N_cols);
-	print_matrix(t_p, M_rows, N_cols);
 
 	cudaMalloc(&d_m, M_rows * M_cols * sizeof(float));
 	cudaMalloc(&d_n, N_rows * N_cols * sizeof(float));
@@ -144,15 +151,20 @@ void run_matrix_mult(int M_rows, int M_cols, int N_rows, int N_cols) {
 	cudaMemcpy(d_m, h_m, M_rows * M_cols * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(d_n, h_n, N_rows * N_cols * sizeof(float), cudaMemcpyHostToDevice);
 
-	dim3 dimGrid((N_cols - 1) / TILE_WIDTH + 1, (M_rows - 1) / TILE_HEIGHT + 1, 1);
-	dim3 dimBlock(TILE_WIDTH, TILE_HEIGHT);
+	dim3 dimBlock(TILE_WIDTH, TILE_WIDTH);
+	dim3 dimGrid((N_cols - 1) / TILE_WIDTH + 1, (M_rows - 1) / TILE_WIDTH + 1);
 
 	revised_tiled_matrix_mult << <dimGrid, dimBlock >> > (d_m, d_n, d_p, M_rows, M_cols, N_cols);
 
 	cudaMemcpy(h_p, d_p, M_rows * N_cols * sizeof(float), cudaMemcpyDeviceToHost);
 
-	print_matrix(h_p, M_rows, N_cols);
-
+	// Assert test to see if CPU and GPU agree on result matrix
+	if (verify_results(h_m, h_n, h_p, M_rows, M_cols, N_cols)) {
+		printf("TEST PASSED\n");
+	}
+	else {
+		printf("TEST FAILED\n");
+	}
 
 	cudaFree(d_m);
 	cudaFree(d_n);
@@ -167,5 +179,6 @@ int main() {
 	// Print the CUDA kernel attributes
 	print_kernel_attributes();
 
-	run_matrix_mult(2,1,1,3);
+	run_matrix_mult(400,450,450,500);
+	run_matrix_mult(1200, 1350, 1350, 1150);
 }
